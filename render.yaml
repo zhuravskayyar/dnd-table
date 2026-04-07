@@ -8,9 +8,9 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: DASHSCOPE_API_KEY
+      - key: NVIDIA_API_KEY
         sync: false
-      - key: QWEN_TEXT_MODEL
+      - key: NVIDIA_TEXT_MODEL
         sync: false
       - key: EDGE_TTS_BASE_URL
         sync: false

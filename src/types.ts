@@ -249,7 +249,7 @@ export type SceneDelta = {
   actorStateNotes: string[];
 };
 
-export type AiTextProvider = 'qwen';
+export type AiTextProvider = 'nvidia';
 export type AiImageProvider = 'openrouter';
 export type AiTtsProvider = 'edge-tts';
 

@@ -471,7 +471,7 @@ async function startTestServer({
   generatePromptText?: (input: GenerateTextInput & { model?: string }) => Promise<{
     text: string;
     model: string;
-    provider: 'qwen';
+    provider: 'nvidia';
     durationMs: number;
     keySlot: number | null;
   }>;
@@ -482,7 +482,7 @@ async function startTestServer({
     text: string | null;
     error: string | null;
     model: string;
-    provider: 'qwen' | null;
+    provider: 'nvidia' | null;
     durationMs: number;
     keySlot: number | null;
   }>>;
@@ -519,7 +519,7 @@ async function startTestServer({
     };
   }>;
   getAiStatus?: () => {
-    textProvider: 'qwen' | 'unconfigured';
+    textProvider: 'nvidia' | 'unconfigured';
     textModel: string | null;
     imageProvider: 'openrouter' | null;
     imageModel: string | null;
@@ -537,7 +537,7 @@ async function startTestServer({
     generatePromptText: generatePromptText ?? (async (input) => ({
       text: await generateText(input),
       model: input.model ?? 'test-text-model',
-      provider: 'qwen',
+      provider: 'nvidia',
       durationMs: 4,
       keySlot: null,
     })),
@@ -549,7 +549,7 @@ async function startTestServer({
         text: `parallel:${prompt}`,
         error: null,
         model: input.model ?? 'test-text-model',
-        provider: 'qwen' as const,
+        provider: 'nvidia' as const,
         durationMs: 5 + index,
         keySlot: null,
       }));
@@ -575,8 +575,8 @@ async function startTestServer({
       },
     })),
     getAiStatus: getAiStatus ?? (() => ({
-      textProvider: 'qwen',
-      textModel: 'qwen-plus',
+      textProvider: 'nvidia',
+      textModel: 'nvidia/llama-3.3-nemotron-super-49b-v1',
       imageProvider: null,
       imageModel: null,
       ttsProvider: null,
@@ -1378,7 +1378,7 @@ test('ai status endpoint exposes provider configuration for the host studio', as
     assert.equal(response.status, 200);
 
     const payload = await response.json();
-    assert.equal(payload.status.textProvider, 'qwen');
+    assert.equal(payload.status.textProvider, 'nvidia');
     assert.equal(payload.status.parallelKeyCount, 1);
     assert.equal(payload.status.ttsProvider, null);
     assert.equal(payload.status.ttsReachable, false);
@@ -1396,8 +1396,8 @@ test('parallel text endpoint returns prompt results in source order', async () =
         status: 'success',
         text: `result:${index}:${prompt}`,
         error: null,
-        model: input.model ?? 'qwen-plus',
-        provider: 'qwen',
+        model: input.model ?? 'nvidia/llama-3.3-nemotron-super-49b-v1',
+        provider: 'nvidia',
         durationMs: 10 + index,
         keySlot: null,
       }));
@@ -1410,7 +1410,7 @@ test('parallel text endpoint returns prompt results in source order', async () =
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         systemPrompt: 'Return short answers.',
-        model: 'qwen-plus',
+        model: 'nvidia/llama-3.3-nemotron-super-49b-v1',
         prompts: ['first prompt', 'second prompt', 'third prompt'],
       }),
     });

@@ -8,9 +8,9 @@ import type {
   AiTtsMetadata,
 } from '../src/types';
 
-const QWEN_API_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const QWEN_DEFAULT_TEXT_MODEL = 'qwen-plus';
+const NVIDIA_DEFAULT_TEXT_MODEL = 'nvidia/llama-3.3-nemotron-super-49b-v1';
 const OPENROUTER_DEFAULT_IMAGE_MODEL = 'google/gemini-2.5-flash-image-preview';
 const EDGE_TTS_DEFAULT_BASE_URL = 'http://localhost:5050';
 const EDGE_TTS_DEFAULT_MODEL = 'tts-1';
@@ -67,14 +67,12 @@ function getOpenRouterKeys() {
   return parseKeyList(process.env.OPENROUTER_API_KEYS ?? process.env.OPENROUTER_API_KEY);
 }
 
-function getQwenApiKey() {
-  return process.env.DASHSCOPE_API_KEY?.trim() || process.env.QWEN_API_KEY?.trim() || '';
+function getNvidiaApiKey() {
+  return process.env.NVIDIA_API_KEY?.trim() || '';
 }
 
 function getDefaultTextModel() {
-  return process.env.QWEN_TEXT_MODEL?.trim()
-    || process.env.DASHSCOPE_TEXT_MODEL?.trim()
-    || QWEN_DEFAULT_TEXT_MODEL;
+  return process.env.NVIDIA_TEXT_MODEL?.trim() || NVIDIA_DEFAULT_TEXT_MODEL;
 }
 
 function getDefaultImageModel() {
@@ -99,11 +97,11 @@ function getEdgeTtsDefaultFormat(): AiTtsFormat {
 }
 
 function resolveTextProvider() {
-  if (getQwenApiKey()) {
-    return 'qwen' as const;
+  if (getNvidiaApiKey()) {
+    return 'nvidia' as const;
   }
 
-  throw new Error('No Qwen API key is configured. Set DASHSCOPE_API_KEY or QWEN_API_KEY.');
+  throw new Error('No NVIDIA API key is configured. Set NVIDIA_API_KEY.');
 }
 
 function takeOpenRouterKey() {
@@ -136,7 +134,7 @@ function buildOpenRouterHeaders(apiKey: string) {
   return headers;
 }
 
-function buildQwenHeaders(apiKey: string) {
+function buildNvidiaHeaders(apiKey: string) {
   return {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${apiKey}`,
@@ -239,23 +237,23 @@ async function parseFailurePayload(response: Response) {
   }
 }
 
-async function generateQwenText({
+async function generateNvidiaText({
   prompt,
   systemPrompt,
   model,
   temperature = 0.4,
 }: TextRequest): Promise<AiTextResponse> {
   const startedAt = Date.now();
-  const apiKey = getQwenApiKey();
+  const apiKey = getNvidiaApiKey();
   if (!apiKey) {
-    throw new Error('DASHSCOPE_API_KEY is not configured on the server.');
+    throw new Error('NVIDIA_API_KEY is not configured on the server.');
   }
 
   const selectedModel = model?.trim() || getDefaultTextModel();
 
-  const response = await fetch(QWEN_API_URL, {
+  const response = await fetch(NVIDIA_API_URL, {
     method: 'POST',
-    headers: buildQwenHeaders(apiKey),
+    headers: buildNvidiaHeaders(apiKey),
     body: JSON.stringify({
       model: selectedModel,
       messages: buildChatMessages({ prompt, systemPrompt }),
@@ -266,18 +264,18 @@ async function generateQwenText({
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(getErrorMessage(payload, 'Qwen request failed.'));
+    throw new Error(getErrorMessage(payload, 'NVIDIA request failed.'));
   }
 
   const text = extractTextContent(payload?.choices?.[0]?.message?.content);
   if (!text) {
-    throw new Error('Qwen returned an empty text response.');
+    throw new Error('NVIDIA returned an empty text response.');
   }
 
   return {
     text,
     model: typeof payload?.model === 'string' ? payload.model : selectedModel,
-    provider: 'qwen',
+    provider: 'nvidia',
     durationMs: Date.now() - startedAt,
     keySlot: null,
   };
@@ -285,7 +283,7 @@ async function generateQwenText({
 
 export async function generateTextWithMetadata(input: TextRequest): Promise<AiTextResponse> {
   resolveTextProvider();
-  return generateQwenText(input);
+  return generateNvidiaText(input);
 }
 
 export async function generateServerText(input: TextRequest) {
@@ -498,7 +496,7 @@ export async function synthesizeSpeech({
 export async function getAiServiceStatus(): Promise<AiServiceStatus> {
   const openRouterKeys = getOpenRouterKeys();
   const configuredTtsBaseUrl = process.env.EDGE_TTS_BASE_URL?.trim() || null;
-  const textProvider = getQwenApiKey() ? 'qwen' : 'unconfigured';
+  const textProvider = getNvidiaApiKey() ? 'nvidia' : 'unconfigured';
   const ttsProbe = configuredTtsBaseUrl
     ? await probeTtsEndpoint(configuredTtsBaseUrl)
     : { reachable: false, message: null };

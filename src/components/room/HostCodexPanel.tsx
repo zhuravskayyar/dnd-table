@@ -344,7 +344,7 @@ export function HostCodexPanel({ room }: HostCodexPanelProps) {
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-[#d4af37]">Parallel Keys</p>
               <p className="rpg-text text-sm">{status?.parallelKeyCount ?? 0}</p>
-              <p className="text-xs text-[#bba791]">Qwen runs through one active server-side key.</p>
+              <p className="text-xs text-[#bba791]">NVIDIA runs through one active server-side key.</p>
             </div>
           </div>
         </SectionCard>
@@ -357,7 +357,7 @@ export function HostCodexPanel({ room }: HostCodexPanelProps) {
                   className="rpg-input"
                   value={textForm.model}
                   onChange={(event) => setTextForm((current) => ({ ...current, model: event.target.value }))}
-                  placeholder="qwen-plus"
+                  placeholder="nvidia/llama-3.3-nemotron-super-49b-v1"
                 />
               </FormField>
               <FormField label="Prompt">
@@ -407,7 +407,7 @@ export function HostCodexPanel({ room }: HostCodexPanelProps) {
                   className="rpg-input"
                   value={parallelForm.model}
                   onChange={(event) => setParallelForm((current) => ({ ...current, model: event.target.value }))}
-                  placeholder="qwen-plus"
+                  placeholder="nvidia/llama-3.3-nemotron-super-49b-v1"
                 />
               </FormField>
               <FormField label="Prompt Blocks">
