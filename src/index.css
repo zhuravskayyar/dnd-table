@@ -1,0 +1,283 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Cinzel", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-body: "Cormorant Garamond", ui-serif, Georgia, serif;
+}
+
+:root {
+  --bg: #0a0a0a;
+  --bg-elevated: rgba(20, 14, 10, 0.78);
+  --panel-top: rgba(31, 22, 18, 0.96);
+  --panel-bottom: rgba(13, 9, 7, 0.96);
+
+  --border: #3a281c;
+  --border-soft: #4a3624;
+  --border-strong: #5c4033;
+
+  --text-main: #e6d5c3;
+  --text-soft: #d4c4b4;
+  --text-accent: #e6c27a;
+
+  --shadow-outer: 0 18px 40px rgba(0, 0, 0, 0.78);
+  --shadow-inner: inset 0 0 18px rgba(0, 0, 0, 0.55);
+  --shadow-input: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+
+  --blue-1: #2b5a8c;
+  --blue-2: #15304f;
+  --blue-border: #4a8bd4;
+
+  --red-1: #8c2b2b;
+  --red-2: #4f1515;
+  --red-border: #d44a4a;
+
+  --green-1: #3a6b2b;
+  --green-2: #1d3f12;
+  --green-border: #5cd44a;
+
+  --dark-1: #3a281c;
+  --dark-2: #1f1612;
+  --dark-border: #5c4033;
+
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --transition-fast: 0.18s ease;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  color: var(--text-main);
+  background:
+    radial-gradient(circle at top, rgba(110, 84, 50, 0.12), transparent 35%),
+    linear-gradient(180deg, #15110f 0%, var(--bg) 100%);
+  background-attachment: fixed;
+}
+
+/* Panels */
+
+.rpg-main-panel {
+  background: linear-gradient(135deg, var(--panel-top) 0%, var(--panel-bottom) 100%);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-outer), var(--shadow-inner);
+}
+
+.rpg-sub-panel {
+  position: relative;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-inner);
+}
+
+/* Typography */
+
+.rpg-title {
+  font-family: var(--font-serif);
+  color: var(--text-accent);
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+}
+
+.rpg-text {
+  font-family: var(--font-body);
+  color: var(--text-soft);
+  font-size: 1.125rem;
+  line-height: 1.45;
+}
+
+/* Inputs */
+
+.rpg-input {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  font-family: var(--font-body);
+  color: var(--text-accent);
+  background: #0a0705;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  box-shadow: var(--shadow-input);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.rpg-input::placeholder {
+  color: rgba(212, 196, 180, 0.55);
+}
+
+.rpg-input:focus {
+  outline: none;
+  border-color: var(--text-accent);
+  box-shadow:
+    var(--shadow-input),
+    0 0 0 3px rgba(230, 194, 122, 0.15);
+}
+
+select.rpg-input {
+  appearance: none;
+  padding-right: 2.2rem;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24'%3E%3Cpath fill='%23e6c27a' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+}
+
+/* Buttons */
+
+.rpg-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 42px;
+  padding: 0.7rem 1rem;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  color: #fff;
+  border: 1px solid #000;
+  border-radius: 10px;
+  cursor: pointer;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.75);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 4px 10px rgba(0, 0, 0, 0.45);
+  transition:
+    transform var(--transition-fast),
+    filter var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.rpg-button:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.rpg-button:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 4px rgba(0, 0, 0, 0.55),
+    0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.rpg-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rpg-btn-blue {
+  background: linear-gradient(to bottom, var(--blue-1), var(--blue-2));
+  border-color: var(--blue-border);
+}
+
+.rpg-btn-red {
+  background: linear-gradient(to bottom, var(--red-1), var(--red-2));
+  border-color: var(--red-border);
+}
+
+.rpg-btn-green {
+  background: linear-gradient(to bottom, var(--green-1), var(--green-2));
+  border-color: var(--green-border);
+}
+
+.rpg-btn-dark {
+  color: var(--text-accent);
+  background: linear-gradient(to bottom, var(--dark-1), var(--dark-2));
+  border-color: var(--dark-border);
+}
+
+/* Scrollbar */
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #0a0705;
+  border-left: 1px solid var(--border);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #7a5543;
+}
+
+/* Chat */
+
+.chat-message-ai,
+.chat-message-user,
+.chat-message-system {
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+.chat-message-ai {
+  background: linear-gradient(to right, rgba(43, 90, 140, 0.18), transparent);
+  border-left: 3px solid var(--blue-border);
+}
+
+.chat-message-user {
+  text-align: right;
+  background: linear-gradient(to left, rgba(58, 107, 43, 0.18), transparent);
+  border-right: 3px solid var(--green-border);
+}
+
+.chat-message-system {
+  text-align: center;
+  font-style: italic;
+  background: rgba(140, 43, 43, 0.14);
+  border: 1px solid var(--red-border);
+}
+
+/* Dice */
+
+.dice-button {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: var(--text-accent);
+  background: radial-gradient(circle at 30% 30%, var(--red-border), var(--red-2));
+  border: 2px solid var(--text-accent);
+  border-radius: 12px;
+  text-shadow: 1px 1px 2px black;
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.65),
+    inset 0 2px 5px rgba(255, 255, 255, 0.18);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.dice-button:active {
+  transform: scale(0.96) rotate(10deg);
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.65),
+    inset 0 1px 2px rgba(255, 255, 255, 0.14);
+}
+
+.dice-roll-anim {
+  animation: roll 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes roll {
+  0%   { transform: rotate(0deg) scale(1); }
+  25%  { transform: rotate(90deg) scale(1.15); }
+  50%  { transform: rotate(180deg) scale(0.92); }
+  75%  { transform: rotate(270deg) scale(1.08); }
+  100% { transform: rotate(360deg) scale(1); }
+}

@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: dnd-table
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DASHSCOPE_API_KEY
+        sync: false
+      - key: QWEN_TEXT_MODEL
+        sync: false
+      - key: EDGE_TTS_BASE_URL
+        sync: false
+      - key: EDGE_TTS_API_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
