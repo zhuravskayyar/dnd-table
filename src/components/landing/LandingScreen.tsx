@@ -159,17 +159,7 @@ function HostEntryForm({
 
         <button
           type="submit"
-          disabled={
-            busyKey !== null ||
-            !hostForm.hostName.trim() ||
-            !hostForm.title.trim() ||
-            !hostForm.filters.setting ||
-            !hostForm.filters.tone ||
-            !hostForm.filters.structure ||
-            !hostForm.filters.combatIntensity ||
-            !hostForm.filters.magicLevel ||
-            !hostForm.filters.darknessLevel
-          }
+          disabled={busyKey !== null}
           className="rpg-button rpg-btn-green w-full rounded-sm py-3"
         >
           {busyKey === 'create-room' ? 'Створюємо кімнату...' : 'Створити кімнату'}

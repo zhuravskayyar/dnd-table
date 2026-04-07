@@ -48,12 +48,12 @@ import { RoomStore } from './roomStore';
 import { applySceneDeltaToMemory, classifyPlayerAction } from './strictHost';
 
 const filtersSchema = z.object({
-  setting: z.string().min(1),
-  tone: z.string().min(1),
-  structure: z.string().min(1),
-  combatIntensity: z.string().min(1),
-  magicLevel: z.string().min(1),
-  darknessLevel: z.string().min(1),
+  setting: z.string().default(''),
+  tone: z.string().default(''),
+  structure: z.string().default(''),
+  combatIntensity: z.string().default(''),
+  magicLevel: z.string().default(''),
+  darknessLevel: z.string().default(''),
   worldConcept: z.string().max(2000).default(''),
 });
 
