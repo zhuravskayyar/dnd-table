@@ -22,6 +22,7 @@ export function FilterEditor({ filters, onChange }: FilterEditorProps) {
               value={filters[field.key]}
               onChange={(event) => handleFilterChange(field.key, event.target.value)}
             >
+              <option value="" disabled>— Обери —</option>
               {field.options.map((option) => (
                 <option key={option} value={option}>
                   {option}
