@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import dotenv from 'dotenv';
 import express from 'express';
@@ -10,7 +11,8 @@ const PORT = Number(process.env.PORT) || 8787;
 const app = createApp();
 
 // In production serve the Vite-built frontend
-const distDir = path.resolve(import.meta.dirname, '..', 'dist');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const distDir = path.resolve(__dirname, '..', 'dist');
 app.use(express.static(distDir));
 // SPA fallback – all non-API routes -> index.html
 app.get(/^(?!\/api).*/, (_req, res) => {
