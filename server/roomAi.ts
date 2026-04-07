@@ -372,59 +372,24 @@ function normalizePlayerStartHooks(room: Room, characters: PlayerCharacter[], ho
     };
   });
 }
-function buildFallbackOpeningScene(room: Room, firstNpcName: string, firstHook: GeneratedPlayerStartHook | undefined) {
-  const question = getOpeningQuestion(room);
-
-  if (isEnglishLanguage(room.language)) {
-    const hookLine = firstHook
-      ? `When ${firstNpcName} shifts in the torchlight, ${firstHook.displayName} catches a detail that lands too close to unfinished business.`
-      : 'When the figure shifts in the torchlight, something about the scene feels too deliberate to be routine.';
-
-    return [
-      `${firstNpcName} stands in the chokepoint with rain on the stone, one hand near a weapon and the other on the half-open gate.`,
-      'Behind the gap, metal drags once across the floor and then goes still.',
-      hookLine,
-      `${firstNpcName} lifts their chin just enough to stop the group in place.`,
-      question,
-    ].join(' ');
-  }
-
-  const hookLine = firstHook
-    ? `Коли ${firstNpcName} трохи повертається в рваному світлі, ${firstHook.displayName} впізнає деталь, яка занадто близько ріже по незакритій справі.`
-    : `Коли ${firstNpcName} трохи повертається в рваному світлі, стає ясно: це не звичайна затримка і не проста формальність.`;
-
-  return [
-    `${firstNpcName} стоїть у проході, мокрий камінь блищить під ногами, а рука вже лежить надто близько до зброї.`,
-    'За напівпрочиненими воротами щось раз скрегоче по металу й затихає.',
-    hookLine,
-    `${firstNpcName} ледь нахиляє голову, ніби дає останню мить перед тим, як усе піде гірше.`,
-    question,
-  ].join(' ');
-}
 
 function buildFallbackOpening(room: Room): GeneratedCampaign {
   const playerStartHooks = normalizePlayerStartHooks(room, room.characters, []);
-  const firstNpcName = isEnglishLanguage(room.language) ? 'Gate Warden' : 'Вартовий брами';
+  const english = isEnglishLanguage(room.language);
 
   return {
-    synopsis: isEnglishLanguage(room.language)
-      ? `${room.title} opens in a tense ${room.filters.setting.toLowerCase()} situation shaped by ${room.filters.tone.toLowerCase()} stakes.`
-      : `"${room.title}" починається з напруженої сцени в дусі "${room.filters.setting}" і з тоном "${room.filters.tone}".`,
-    openingScene: buildFallbackOpeningScene(room, firstNpcName, playerStartHooks[0]),
+    synopsis: english
+      ? `"${room.title}" begins under uncertain circumstances shaped by ${room.filters.setting.toLowerCase()} realities.`
+      : `"${room.title}" починається за невизначених обставин у дусі "${room.filters.setting}".`,
+    openingScene: english
+      ? `The group finds itself at a crossroads with little time and even less clarity. Something has already gone wrong. ${getOpeningQuestion(room)}`
+      : `Група опиняється на роздоріжжі — часу мало, ясності ще менше. Щось уже пішло не так. ${getOpeningQuestion(room)}`,
     conflicts: [
-      isEnglishLanguage(room.language)
-        ? 'Understand what is wrong here before the situation closes.'
-        : 'Зрозуміти, що тут пішло не так, перш ніж можливість зникне.',
+      english
+        ? 'Figure out what is happening before the window closes.'
+        : 'Зрозуміти, що відбувається, перш ніж можливість зникне.',
     ],
-    npcs: [
-      {
-        name: firstNpcName,
-        description: isEnglishLanguage(room.language)
-          ? 'A tense local authority who controls access and knows more than they say.'
-          : 'Напружений місцевий сторож, який контролює доступ і знає більше, ніж каже.',
-        role: isEnglishLanguage(room.language) ? 'First contact at the gate' : 'Перший контакт біля брами',
-      },
-    ],
+    npcs: [],
     playerStartHooks,
   };
 }
@@ -443,69 +408,12 @@ function pickBySeed<T>(items: T[], seed: number, offset = 0) {
   return items[(seed + offset) % items.length];
 }
 
-function detectSettingFamily(room: Room) {
-  const normalized = `${room.filters.setting} ${room.filters.worldConcept}`.toLowerCase();
-
-  if (includesAny(normalized, [
-    'кібер',
-    'cyber',
-    'sci-fi',
-    'sci fi',
-    'science fiction',
-    'космо',
-    'space',
-    'postapoc',
-    'post-apoc',
-    'постапок',
-  ])) {
-    return 'cyber';
-  }
-
-  if (includesAny(normalized, ['стімпанк', 'steampunk'])) {
-    return 'steampunk';
-  }
-
-  return 'fantasy';
-}
-
 function normalizeIdentityText(value: string) {
   return value
     .toLowerCase()
     .replace(/[^a-z0-9а-яіїєґ\s]/giu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-}
-
-function getConceptLead(worldConcept: string) {
-  const trimmed = worldConcept.trim();
-  if (!trimmed) {
-    return '';
-  }
-
-  const firstSentence = trimmed.match(/^[^.!?]+[.!?]?/);
-  return (firstSentence?.[0] ?? trimmed).trim().slice(0, 180);
-}
-
-function pickUniqueFromPool(items: string[], seed: number, usedValues: Set<string>) {
-  for (let offset = 0; offset < items.length; offset += 1) {
-    const candidate = pickBySeed(items, seed, offset);
-    if (!usedValues.has(normalizeIdentityText(candidate))) {
-      return candidate;
-    }
-  }
-
-  return pickBySeed(items, seed);
-}
-
-function pickDistinctBySeed<T>(items: T[], seed: number, count: number) {
-  const result: T[] = [];
-  const limit = Math.min(count, items.length);
-
-  for (let offset = 0; offset < items.length && result.length < limit; offset += 1) {
-    result.push(items[(seed + offset) % items.length]);
-  }
-
-  return result;
 }
 
 function normalizeInventoryKey(name: string) {
@@ -526,163 +434,23 @@ function countSharedInventoryItems(left: PlayerCharacter['inventory'], right: Pl
   ), 0);
 }
 
-function buildInventoryVariant(
-  pool: PlayerCharacter['inventory'],
-  seed: number,
-  existingCharacters: PlayerCharacter[],
-  desiredCount = 4,
-) {
-  const usedSignatures = new Set(existingCharacters.map((character) => makeInventorySignature(character.inventory)));
-  let fallbackVariant: PlayerCharacter['inventory'] | null = null;
-
-  for (let shift = 0; shift < pool.length; shift += 1) {
-    const candidate = pickDistinctBySeed(pool, seed + shift, desiredCount).map((item) => ({ ...item }));
-    const signature = makeInventorySignature(candidate);
-
-    if (!fallbackVariant) {
-      fallbackVariant = candidate;
-    }
-
-    if (!usedSignatures.has(signature)) {
-      return candidate;
-    }
-  }
-
-  return fallbackVariant ?? pool.slice(0, desiredCount).map((item) => ({ ...item }));
-}
-
 function buildFallbackCharacter(room: Room, playerId: string, displayName: string): GenerateCharacterResult {
-  const seed = createDeterministicSeed(`${room.roomCode}:${playerId}:${displayName}:${room.filters.setting}:${room.filters.worldConcept}`);
-  const family = detectSettingFamily(room);
   const english = isEnglishLanguage(room.language);
-  const conceptLead = getConceptLead(room.filters.worldConcept);
-  const existingCharacters = room.characters;
-
-  const fantasyRoles = english
-    ? ['trail warden', 'grave scout', 'bog alchemist', 'oathscar sellsword', 'witchlight seeker', 'lantern archivist', 'relic cantor', 'raven duelist']
-    : ['слідопит прикордоння', 'розвідник крипт', 'болотний алхімік', 'найманець зі шрамом-присягою', 'шукач відьомського світла', 'ліхтарний архіваріус', 'кантор реліквій', 'воронячий дуелянт'];
-  const cyberRoles = english
-    ? ['breach runner', 'signal ghost', 'forensic rigger', 'blackout infiltrator', 'contract sentinel', 'scrapyard medic', 'drone wrangler', 'memory smuggler']
-    : ['брич-ранер', 'сигнальний привид', 'судовий ригер', 'інфільтратор блекауту', 'контрактний сентинел', 'медик зі скрап-району', 'доглядач дронів', 'контрабандист памʼяті'];
-  const steampunkRoles = english
-    ? ['coil duelist', 'aether cartographer', 'boiler saboteur', 'brass courier', 'smoke inspector', 'clockwork naturalist', 'pressure surgeon', 'rail marshal']
-    : ['котушковий дуелянт', 'етерний картограф', 'саботажник котлів', 'латунний курʼєр', 'інспектор димних кварталів', 'годинниковий натураліст', 'хірург тиску', 'рейковий маршал'];
-  const descriptorPool = english
-    ? ['reads danger before it blooms', 'trusts tools more than promises', 'moves like an ambush is always one breath away', 'keeps a cold head while others rush', 'notices lies faster than faces', 'treats every corridor like a trap', 'speaks briefly and with intent', 'does not waste light, time, or leverage']
-    : ['читає небезпеку ще до того, як вона оформиться', 'довіряє інструментам більше, ніж обіцянкам', 'рухається так, ніби засідка завжди поруч', 'тримає холодну голову, коли інші поспішають', 'брехню помічає швидше за обличчя', 'сприймає кожен коридор як пастку', 'говорить коротко й по суті', 'не марнує світло, час і перевагу'];
-  const scarPool = english
-    ? ['lost a whole team to a false trail', 'survived a job that should have ended in silence', 'watched a patron sell people out for safety', 'carried blame for a disaster built by someone richer', 'buried the one witness who knew the full truth', 'was betrayed at the exact moment the gate opened', 'walked out of a cleanup that erased everyone else', 'still follows the ruin left by one wrong choice']
-    : ['втратив цілу команду через хибний слід', 'пережив справу, яка мала закінчитися тишею', 'бачив, як патрон продав людей заради безпеки', 'поніс на собі вину за катастрофу, яку побудував хтось багатший', 'поховав єдиного свідка, що знав правду', 'був зраджений саме в мить відкриття брами', 'вийшов із зачистки, де стерли всіх інших', 'досі йде по сліду руїни від одного хибного вибору'];
-  const keepsakePool = english
-    ? ['a damaged map scrap', 'a split coin with an old crest', 'a soot-stained glove patch', 'a key without a known lock', 'a sealed note never delivered', 'a broken badge from a dead crew', 'a black-feather charm', 'a maintenance token with erased numbers']
-    : ['пошкоджений клапоть мапи', 'розколоту монету зі старим гербом', 'закіптюжену латку від рукавиці', 'ключ без відомого замка', 'запечатану записку, яку так і не віддали', 'зламаний жетон мертвої команди', 'талісман із чорного пера', 'сервісну бирку зі стертими номерами'];
-  const fantasyDrives = english
-    ? ['the one who opened the black gate', 'the patron who sold the caravan', 'the relic map hidden behind a false cult', 'the proof that the marsh voices were real', 'the grave ledger everyone pretends was burned', 'the hunter who taught monsters to pray', 'the debt still owed to the dead', 'the name behind the counterfeit blessing']
-    : ['того, хто відкрив чорну браму', 'патрона, який продав караван', 'мапу реліквій, сховану за фальшивим культом', 'доказ, що болотні голоси були справжніми', 'цвинтарний реєстр, який усі вдають спаленим', 'мисливця, що навчив чудовиськ молитися', 'борг, який досі винні мертвим', 'імʼя за підробленим благословенням'];
-  const cyberDrives = english
-    ? ['the executive behind the silent cleanup', 'the archive key that restores stolen memories', 'the broker who sold the team into blackout', 'the ledger proving who profits from the ration war', 'the witness erased from every camera', 'the shipment that rewrote a district overnight', 'the backdoor hidden in obsolete city firmware', 'the debt chain binding the wrong people together']
-    : ['топменеджера за тихою зачисткою', 'архівний ключ, що повертає вкрадену памʼять', 'брокера, який здав команду в блекаут', 'реєстр, що показує, хто заробляє на війні пайків', 'свідка, стертоого з усіх камер', 'партію, яка переписала район за одну ніч', 'бекдор у застарілій прошивці міста', 'ланцюг боргів, що тримає не тих людей'];
-  const steampunkDrives = english
-    ? ['the minister who sold disaster as progress', 'the patent file that proves sabotage at the top', 'the conductor who left civilians sealed in smoke', 'the missing engine core everyone wants dead for', 'the blackbook of favors owed by the rail houses', 'the investor behind the engine riots', 'the forged safety seals that killed a district', 'the design that could free whole neighborhoods from debt']
-    : ['міністра, який продав катастрофу як прогрес', 'патентний файл, що доводить саботаж нагорі', 'кондуктора, який залишив цивільних у димі', 'зникле ядро двигуна, за яке вже готові вбивати', 'чорну книгу боргів рейкових домів', 'інвестора за двигунними бунтами', 'підроблені пломби безпеки, що вбили район', 'креслення, яке могло б звільнити цілі квартали від боргу'];
-  const fantasyInventory = english
-    ? [
-      { name: 'Hunter knife', quantity: 1, kind: 'Weapon', description: 'Balanced for sudden close work in ruined halls.' },
-      { name: 'Pitch torch', quantity: 2, kind: 'Utility', description: 'Burns hot through damp fog and cellar air.' },
-      { name: 'Field tonic', quantity: 2, kind: 'Alchemy', description: 'A harsh draught that keeps pain from setting in.' },
-      { name: 'Bone ward charm', quantity: 1, kind: 'Keepsake', description: 'A crude talisman carried against grave-born luck.' },
-      { name: 'Iron grapnel', quantity: 1, kind: 'Gear', description: 'Useful on broken walls and collapsed stairs.' },
-      { name: 'Salt packet', quantity: 2, kind: 'Ritual', description: 'Thrown across thresholds and strange remains.' },
-      { name: 'Crow-feather tokens', quantity: 3, kind: 'Marks', description: 'Quiet trail signs between hunters and scouts.' },
-      { name: 'Lock picks', quantity: 1, kind: 'Tools', description: 'Slim steel tools wrapped in oilcloth.' },
-    ]
-    : [
-      { name: 'Клинок мисливця', quantity: 1, kind: 'Зброя', description: 'Збалансований для раптової роботи в тісних руїнах.' },
-      { name: 'Смоляний факел', quantity: 2, kind: 'Утиліта', description: 'Горить крізь сирий туман і підвальний сморід.' },
-      { name: 'Польова настоянка', quantity: 2, kind: 'Алхімія', description: 'Різкий засіб, що не дає болю взяти гору.' },
-      { name: 'Кістяний оберіг', quantity: 1, kind: 'Талісман', description: 'Грубий захист від злої удачі та могильного холоду.' },
-      { name: 'Залізний гак', quantity: 1, kind: 'Спорядження', description: 'Стає в пригоді на мурах і зруйнованих сходах.' },
-      { name: 'Пакунок солі', quantity: 2, kind: 'Ритуал', description: 'Йде на пороги, останки та все підозріло тихе.' },
-      { name: 'Жетони з воронячим пером', quantity: 3, kind: 'Мітки', description: 'Тихі сигнали між мисливцями та розвідниками.' },
-      { name: 'Відмички', quantity: 1, kind: 'Інструменти', description: 'Тонкі сталеві ключі в промасленій тканині.' },
-    ];
-  const cyberInventory = english
-    ? [
-      { name: 'Shock baton', quantity: 1, kind: 'Weapon', description: 'Compact leverage for tight corridors and lifts.' },
-      { name: 'Signal jammer', quantity: 2, kind: 'Utility', description: 'Briefly muddies cameras, locks, and cheap drones.' },
-      { name: 'Med patch', quantity: 2, kind: 'Biotech', description: 'A peel-and-stick stabilizer for pain and blood loss.' },
-      { name: 'Ghost card', quantity: 1, kind: 'Access', description: 'A cloned pass with a narrow life span.' },
-      { name: 'Fiber line spool', quantity: 1, kind: 'Gear', description: 'Good for climbs, quick ties, and ugly repairs.' },
-      { name: 'Data shard', quantity: 1, kind: 'Intel', description: 'Encrypted residue from a failed run.' },
-      { name: 'Pulse beacon', quantity: 2, kind: 'Signals', description: 'A tiny locator for marking exits or targets.' },
-      { name: 'Spare drone eye', quantity: 1, kind: 'Hardware', description: 'Useful for jury-rigged vision or trade.' },
-    ]
-    : [
-      { name: 'Шокова палиця', quantity: 1, kind: 'Зброя', description: 'Компактний важіль ближнього бою для ліфтів і вузьких проходів.' },
-      { name: 'Глушник сигналу', quantity: 2, kind: 'Утиліта', description: 'Ненадовго збиває камери, замки та дешеві дрони.' },
-      { name: 'Мед-патч', quantity: 2, kind: 'Біотех', description: 'Липка стабілізація проти болю й крововтрати.' },
-      { name: 'Примарна картка', quantity: 1, kind: 'Доступ', description: 'Клонований пропуск із коротким, але цінним життям.' },
-      { name: 'Котушка фібер-лінії', quantity: 1, kind: 'Спорядження', description: 'Для підйомів, швидких вузлів і негарних ремонтів.' },
-      { name: 'Дата-шард', quantity: 1, kind: 'Інтел', description: 'Зашифрований уламок із проваленого забігу.' },
-      { name: 'Пульс-маяк', quantity: 2, kind: 'Сигнал', description: 'Малий локатор для позначення виходів або цілей.' },
-      { name: 'Запасне око дрона', quantity: 1, kind: 'Залізо', description: 'Стане в пригоді для кустарного огляду або обміну.' },
-    ];
-  const steampunkInventory = english
-    ? [
-      { name: 'Coil pistol', quantity: 1, kind: 'Weapon', description: 'A compact sidearm with an unreliable discharge.' },
-      { name: 'Brass lantern', quantity: 1, kind: 'Utility', description: 'Warm light for tunnels, ducts, and engine decks.' },
-      { name: 'Pressure vial', quantity: 2, kind: 'Chemistry', description: 'A restorative dose mixed for field emergencies.' },
-      { name: 'Tool roll', quantity: 1, kind: 'Tools', description: 'Picks, screws, valves, and winding keys in one wrap.' },
-      { name: 'Steam gloves', quantity: 1, kind: 'Gear', description: 'Insulated gloves for hot rails and angry metal.' },
-      { name: 'Signal whistle', quantity: 1, kind: 'Command', description: 'Carries sharply over machinery and crowd noise.' },
-      { name: 'Wire saw', quantity: 1, kind: 'Utility', description: 'Cuts thin bars, bolts, and stubborn fittings.' },
-      { name: 'Gauge chalk', quantity: 2, kind: 'Marks', description: 'Marks routes, valve states, and hidden service signs.' },
-    ]
-    : [
-      { name: 'Котушковий пістоль', quantity: 1, kind: 'Зброя', description: 'Компактна бічна зброя з норовливим зарядом.' },
-      { name: 'Латунний ліхтар', quantity: 1, kind: 'Утиліта', description: 'Тепле світло для тунелів, шахт і машинних палуб.' },
-      { name: 'Колба тиску', quantity: 2, kind: 'Хімія', description: 'Відновлювальний засіб для польових криз.' },
-      { name: 'Рулон інструментів', quantity: 1, kind: 'Інструменти', description: 'Відмички, гвинти, клапани й заводні ключі в одному наборі.' },
-      { name: 'Паростійкі рукавиці', quantity: 1, kind: 'Спорядження', description: 'Захист для гарячих рейок і злого металу.' },
-      { name: 'Сигнальний свисток', quantity: 1, kind: 'Команда', description: 'Пробиває шум механізмів і натовпу.' },
-      { name: 'Дротяна пилка', quantity: 1, kind: 'Утиліта', description: 'Бере тонкі прути, болти й уперту арматуру.' },
-      { name: 'Крейда манометрів', quantity: 2, kind: 'Мітки', description: 'Позначає маршрути, клапани та сервісні знаки.' },
-    ];
-
-  const rolePool = family === 'cyber' ? cyberRoles : family === 'steampunk' ? steampunkRoles : fantasyRoles;
-  const drivePool = family === 'cyber' ? cyberDrives : family === 'steampunk' ? steampunkDrives : fantasyDrives;
-  const inventoryPool = family === 'cyber' ? cyberInventory : family === 'steampunk' ? steampunkInventory : fantasyInventory;
-  const classFantasy = pickUniqueFromPool(
-    rolePool,
-    seed,
-    new Set(existingCharacters.map((character) => normalizeIdentityText(character.classFantasy))),
-  );
-  const descriptor = pickBySeed(descriptorPool, seed, 1);
-  const scar = pickBySeed(scarPool, seed, 2);
-  const drive = pickBySeed(drivePool, seed, 3);
-  const keepsake = pickBySeed(keepsakePool, seed, 4);
-  const inventory = buildInventoryVariant(inventoryPool, seed + 5, existingCharacters, 4);
-  const conceptSentence = conceptLead
-    ? (english ? ` The room premise revolves around "${conceptLead}".` : ` Рамка світу тримається на ідеї: "${conceptLead}".`)
-    : '';
-  const bioSummary = english
-    ? `${displayName} is a ${classFantasy} who ${descriptor}.${conceptSentence}`
-    : `${displayName} — ${classFantasy}, який ${descriptor}.${conceptSentence}`;
-  const backstory = english
-    ? `${displayName} ${scar}. Since then they have carried ${keepsake.toLowerCase()} and followed every lead that smells like ${room.title}.`
-    : `${displayName} ${scar}. Відтоді він носить при собі ${keepsake.toLowerCase()} й хапається за кожен слід, що пахне історією "${room.title}".`;
-  const motivation = english
-    ? `Track down ${drive}, settle the old debt before it destroys another crew, and turn the next dangerous clue into leverage.`
-    : `Вистежити ${drive}, закрити старий борг до того, як він зламає ще одну команду, і перетворити наступну небезпечну зачіпку на власну перевагу.`;
 
   return {
     playerId,
     displayName,
-    bioSummary,
-    backstory,
-    motivation,
-    classFantasy,
-    inventory,
+    bioSummary: english
+      ? `${displayName} is an adventurer drawn to the events of "${room.title}".`
+      : `${displayName} — авантюрист, якого привели сюди події "${room.title}".`,
+    backstory: english
+      ? `${displayName} carries a past that few would believe and fewer still would forgive.`
+      : `${displayName} має минуле, у яке мало хто повірить і ще менше — пробачить.`,
+    motivation: english
+      ? `Survive whatever "${room.title}" has in store and turn it to advantage.`
+      : `Пережити все, що принесе "${room.title}", і обернути на свою користь.`,
+    classFantasy: english ? 'wanderer' : 'мандрівник',
+    inventory: [],
   };
 }
 

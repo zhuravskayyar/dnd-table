@@ -71,20 +71,20 @@ export const FILTER_FIELD_CONFIG: FilterFieldConfig[] = [
 
 export function createDefaultFilters(): CampaignFilters {
   return {
-    setting: 'Темне фентезі',
-    tone: 'Похмурий та серйозний',
-    structure: 'Дослідження підземель',
-    combatIntensity: 'Висока',
-    magicLevel: 'Середня магія',
-    darknessLevel: 'Стандартний',
+    setting: '',
+    tone: '',
+    structure: '',
+    combatIntensity: '',
+    magicLevel: '',
+    darknessLevel: '',
     worldConcept: '',
   };
 }
 
 export function createDefaultHostForm(): CreateRoomRequest {
   return {
-    hostName: 'Майстер',
-    title: 'Тінь Короля Ліча',
+    hostName: '',
+    title: '',
     language: 'Українська',
     filters: createDefaultFilters(),
     sessionType: 'Один постріл',
