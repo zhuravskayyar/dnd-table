@@ -362,21 +362,22 @@ export function classifyPlayerAction({
   const isVague = normalizedAction.length < 18
     || includesAny(normalizedAction, [
       'щось',
-      'це',
       'якось',
       'роблю',
       'пробую',
       'вплинути',
-      'оглядаюсь',
       'думаю',
       'something',
       'somehow',
       'do something',
       'try something',
-      'look around',
     ]);
 
-  const isSearch = includesAny(normalizedAction, ['обшук', 'шука', 'огляда', 'search', 'inspect', 'look for']);
+  const isSearch = includesAny(normalizedAction, [
+    'обшук', 'шука', 'огляда', 'оглян', 'дивл', 'роздивл', 'оглядаюсь',
+    'перевір', 'осмотр', 'вивч', 'дослід',
+    'search', 'inspect', 'look for', 'look around', 'examine', 'survey', 'scout',
+  ]);
   const isSocial = includesAny(normalizedAction, ['перекон', 'бреш', 'заляк', 'прос', 'вмов', 'кажу', 'говор', 'persuade', 'convince', 'intimidate', 'ask', 'tell']);
   const isStealth = includesAny(normalizedAction, ['підкра', 'непоміт', 'тихо', 'ззаду', 'хова', 'stealth', 'sneak', 'behind', 'hide']);
   const isAttack = includesAny(normalizedAction, ['атак', 'вдар', 'бʼю', "б'ю", 'ріж', 'удар', 'kill', 'attack', 'stab', 'slash', 'cut']);
@@ -409,7 +410,7 @@ export function classifyPlayerAction({
   const strongTags = [isSearch, isSocial, isStealth, isAttack, isMobility, isMagic, isItemUse].filter(Boolean).length;
   const hasCompoundFlow = includesAny(normalizedAction, [' і ', ' потім ', ' then ', ' after ', ' afterward ', 'далі ']);
 
-  if (isVague && !targetActor && !itemName) {
+  if (isVague && !targetActor && !itemName && !isSearch) {
     return {
       mode: 'clarify',
       reason: 'vague_action',
