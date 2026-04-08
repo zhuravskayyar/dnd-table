@@ -115,7 +115,7 @@ function createMockGenerateText({
       });
     }
 
-    if (systemPrompt.includes('opening tabletop RPG scene')) {
+    if (systemPrompt.includes('opening the first scene for players')) {
       const character = extractFirstCharacter(prompt);
       const isEnglish = systemPrompt.includes('Respond in English.');
       const isGroup = (prompt.match(/PlayerId:/g) ?? []).length > 1;
@@ -180,7 +180,7 @@ function createMockGenerateText({
       });
     }
 
-    if (systemPrompt.includes('plan a player action resolution sequence')) {
+    if (systemPrompt.includes('action-resolution planner')) {
       if (invalidActionPlanJson) {
         return `{
           "mode": "sequence",
@@ -296,7 +296,7 @@ function createMockGenerateText({
       });
     }
 
-    if (systemPrompt.includes('evaluate one tabletop RPG d20 check step')) {
+    if (systemPrompt.includes('resolving a dice result')) {
       if (invalidCheckEvaluationJson) {
         return `{
           "resolvedCheck": {
@@ -450,7 +450,7 @@ function createMockGenerateText({
       });
     }
 
-    if (systemPrompt.includes('professional tabletop RPG game master')) {
+    if (systemPrompt.includes('final narrator game-master voice')) {
       return 'Майстер коротко описує реакцію сцени та чекає вашого наступного рішення.';
     }
 
@@ -1056,7 +1056,7 @@ test('malformed check evaluation JSON falls back to deterministic resolution', a
   const baseGenerateText = createMockGenerateText({ invalidCheckEvaluationJson: true });
   const server = await startTestServer({
     generateText: async (input) => {
-      if (input.systemPrompt.includes('plan a player action resolution sequence')) {
+      if (input.systemPrompt.includes('action-resolution planner')) {
         const guardId = extractGuardActorId(input.prompt);
         return JSON.stringify({
           mode: 'sequence',

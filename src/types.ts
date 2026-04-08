@@ -20,6 +20,7 @@ export type CampaignFilters = {
   magicLevel: string;
   darknessLevel: string;
   worldConcept: string;
+  noviceMode?: boolean;
 };
 
 export type InventoryItem = {

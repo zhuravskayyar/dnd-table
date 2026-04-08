@@ -45,6 +45,23 @@ export function FilterEditor({ filters, onChange }: FilterEditorProps) {
           Вільний опис, який майстер використовує як авторський задум світу. Сюди можна вписати власну ідею кампанії без обмеження preset-ами.
         </p>
       </div>
+
+      <div>
+        <label className="flex cursor-pointer items-center gap-3 rounded-sm border border-[#5c4033] bg-[rgba(10,7,5,0.6)] px-4 py-3 transition hover:bg-[rgba(20,14,10,0.8)]">
+          <input
+            type="checkbox"
+            checked={filters.noviceMode ?? false}
+            onChange={(event) => handleFilterChange('noviceMode', event.target.checked)}
+            className="h-4 w-4 accent-[#d4af37]"
+          />
+          <div>
+            <span className="text-sm font-semibold text-[#f3deac]">Режим новачка</span>
+            <p className="mt-0.5 text-xs leading-5 text-[#bba389]">
+              М'якша класифікація дій, підказки після кожної відповіді майстра та навчальні приклади на старті.
+            </p>
+          </div>
+        </label>
+      </div>
     </div>
   );
 }

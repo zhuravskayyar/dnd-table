@@ -78,6 +78,7 @@ export function createDefaultFilters(): CampaignFilters {
     magicLevel: '',
     darknessLevel: '',
     worldConcept: '',
+    noviceMode: false,
   };
 }
 

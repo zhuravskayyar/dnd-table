@@ -55,6 +55,7 @@ const filtersSchema = z.object({
   magicLevel: z.string().default(''),
   darknessLevel: z.string().default(''),
   worldConcept: z.string().max(2000).default(''),
+  noviceMode: z.boolean().optional().default(false),
 });
 
 const inventoryItemSchema = z.object({

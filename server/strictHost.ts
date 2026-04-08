@@ -343,6 +343,7 @@ export function classifyPlayerAction({
   const normalizedAction = normalizeActionText(action);
   const targetActor = findTargetActor(room, action);
   const itemName = findInventoryItemName(character, action);
+  const novice = Boolean(room.filters.noviceMode);
 
   if (hasModernTechMismatch(room, normalizedAction)) {
     return {
@@ -359,7 +360,7 @@ export function classifyPlayerAction({
     };
   }
 
-  const isVague = normalizedAction.length < 18
+  const isVague = !novice && (normalizedAction.length < 18
     || includesAny(normalizedAction, [
       'щось',
       'якось',
@@ -371,7 +372,7 @@ export function classifyPlayerAction({
       'somehow',
       'do something',
       'try something',
-    ]);
+    ]));
 
   const isSearch = includesAny(normalizedAction, [
     'обшук', 'шука', 'огляда', 'оглян', 'дивл', 'роздивл', 'оглядаюсь',
@@ -423,7 +424,7 @@ export function classifyPlayerAction({
     };
   }
 
-  if (isSearch && includesAny(normalizedAction, ['все', 'усе', 'кімнату', 'всю', 'усю', 'everything', 'whole room', 'entire room'])) {
+  if (isSearch && !novice && includesAny(normalizedAction, ['все', 'усе', 'кімнату', 'всю', 'усю', 'everything', 'whole room', 'entire room'])) {
     return {
       mode: 'clarify',
       reason: 'search_scope',
@@ -436,7 +437,7 @@ export function classifyPlayerAction({
     };
   }
 
-  if (isSocial && (!targetActor || !hasSocialLeverage)) {
+  if (isSocial && !novice && (!targetActor || !hasSocialLeverage)) {
     return {
       mode: 'clarify',
       reason: 'social_missing_target_or_leverage',
@@ -465,6 +466,21 @@ export function classifyPlayerAction({
   if (isStealth && isAttack) {
     const stealth = createStep(room, 'strict-stealth', 'stealth', isEnglishLanguage(room.language) ? 'Stealth' : 'Скритність', targetActor, itemName);
     const attack = createStep(room, 'strict-attack', 'attack', isEnglishLanguage(room.language) ? 'Attack' : 'Влучання', targetActor, itemName);
+
+    if (novice) {
+      // Novice mode: 2 steps (stealth + attack with damage folded in) instead of 3
+      return {
+        mode: 'sequence',
+        reason: 'stealth_attack_sequence_novice',
+        message: formatGatePrompt(room, stealth.step, stealth.frame.stakes),
+        targetActorId: targetActor?.id ?? null,
+        itemName,
+        steps: [stealth.step, attack.step],
+        gateTriggers: dedupe([...stealth.frame.triggers, ...attack.frame.triggers]),
+        sceneAxes: dedupe([stealth.frame.axis, attack.frame.axis]),
+      };
+    }
+
     const damage = createStep(room, 'strict-damage', 'damage', isEnglishLanguage(room.language) ? 'Damage' : 'Урон', targetActor, itemName);
     return {
       mode: 'sequence',
@@ -493,6 +509,21 @@ export function classifyPlayerAction({
 
   if (isAttack) {
     const attack = createStep(room, 'strict-attack', 'attack', isEnglishLanguage(room.language) ? 'Attack' : 'Влучання', targetActor, itemName);
+
+    if (novice) {
+      // Novice mode: single attack roll that includes damage outcome
+      return {
+        mode: 'sequence',
+        reason: 'attack_sequence_novice',
+        message: formatGatePrompt(room, attack.step, attack.frame.stakes),
+        targetActorId: targetActor?.id ?? null,
+        itemName,
+        steps: [attack.step],
+        gateTriggers: attack.frame.triggers,
+        sceneAxes: [attack.frame.axis],
+      };
+    }
+
     const damage = createStep(room, 'strict-damage', 'damage', isEnglishLanguage(room.language) ? 'Damage' : 'Урон', targetActor, itemName);
     return {
       mode: 'sequence',

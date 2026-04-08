@@ -1,5 +1,14 @@
 import { z } from 'zod';
-import { STRICT_HOST_RULES } from '../src/constants/hostRules';
+import {
+  STRICT_HOST_RULES,
+  HOST_CORE_RULES,
+  WORLD_BUILDER_RULES,
+  OPENING_RULES,
+  ACTION_PLANNER_RULES,
+  CHECK_RESOLUTION_RULES,
+  NARRATOR_RULES,
+  NOVICE_RULES,
+} from '../src/constants/hostRules';
 import { getRecentMessages } from '../src/lib/sessionMemory';
 import {
   ActionPlanDecision,
@@ -28,30 +37,52 @@ import {
 } from './strictHost';
 
 const CHARACTER_SYSTEM_PROMPT = 'You generate a tabletop RPG player character and return strict JSON only.';
-const OPENING_SYSTEM_PROMPT = 'You generate an opening tabletop RPG scene and return strict JSON only.';
 const CONCEPT_GUARD_SYSTEM_PROMPT = 'You validate whether a player action fits the campaign concept and return strict JSON only.';
-const ACTION_RESOLUTION_SYSTEM_PROMPT = `
-You plan a player action resolution sequence for a tabletop RPG inside a deterministic host engine.
-Return strict JSON only.
-${formatStrictRulesForPrompt()}
-`.trim();
-const EVALUATE_CHECK_STEP_SYSTEM_PROMPT = `
-You evaluate one tabletop RPG d20 check step inside a deterministic host engine.
-Return strict JSON only.
-${formatStrictRulesForPrompt()}
-`.trim();
-const PROFESSIONAL_DM_SYSTEM_PROMPT = `
-You are a professional tabletop RPG game master.
-- Keep continuity with established canon, NPCs, inventory, player backstories, and scene actors.
-- Do not speak for the players.
-- Respect prior check outcomes and mechanical scene state.
-- Be concise, atmospheric, and actionable.
-- Follow the host response template: world state -> action reaction -> stakes or consequence -> next actor.
-- Never grant success in a risky scene without the server-authorized gate result.
+
+// ─── Prompt builders: one per layer ──────────────────────────────────
+
+function buildOpeningSystemPrompt(room: Room) {
+  const base = [
+    HOST_CORE_RULES,
+    OPENING_RULES,
+    'Return strict JSON only.',
+  ].join('\n\n');
+  return room.filters.noviceMode ? base + '\n\n' + NOVICE_RULES : base;
+}
+
+function buildActionPlannerSystemPrompt(room: Room) {
+  const base = [
+    HOST_CORE_RULES,
+    ACTION_PLANNER_RULES,
+    formatStrictRulesForPrompt(),
+    'Return strict JSON only.',
+  ].join('\n\n');
+  return room.filters.noviceMode ? base + '\n\n' + NOVICE_RULES : base;
+}
+
+function buildCheckResolutionSystemPrompt(room: Room) {
+  const base = [
+    HOST_CORE_RULES,
+    CHECK_RESOLUTION_RULES,
+    formatStrictRulesForPrompt(),
+    'Return strict JSON only.',
+  ].join('\n\n');
+  return room.filters.noviceMode ? base + '\n\n' + NOVICE_RULES : base;
+}
+
+function buildNarratorSystemPrompt(room: Room) {
+  const base = [
+    HOST_CORE_RULES,
+    NARRATOR_RULES,
+    `Additional narrator constraints:
 - NEVER ask the player to clarify or rephrase their action. The action has already been approved by the host engine. Your job is to narrate the result.
-- If the action is a simple observation or exploration, describe what the character sees, hears, and senses. Paint the scene with concrete sensory details.
+- If the action is a simple observation or exploration, describe what the character sees, hears, and senses with concrete sensory details.
 - Always advance the narrative. Every response must move the story forward, reveal new information, or change the situation.
-`.trim();
+- Do not speak for the players.`,
+  ].join('\n\n');
+  return room.filters.noviceMode ? base + '\n\n' + NOVICE_RULES : base;
+}
+
 const MEMORY_UPDATE_SYSTEM_PROMPT = `
 You are the narrative memory system for a tabletop RPG campaign.
 Return strict JSON only.
@@ -1195,7 +1226,7 @@ export async function generateOpening({
   try {
     const opening = await generateJson({
       generateText,
-      systemPrompt: OPENING_SYSTEM_PROMPT,
+      systemPrompt: buildOpeningSystemPrompt(room),
       schema: generatedOpeningSchema,
       prompt: `
 Create the opening setup for this room.
@@ -1228,14 +1259,29 @@ Return JSON:
   ]
 }
 
+The openingScene must answer four questions for the player:
+1. Where they are right now.
+2. What is happening around them.
+3. What feels wrong, dangerous, or urgent.
+4. What obvious actions they can take.
+
 - Start the openingScene inside a concrete moment that is already happening.
-- The openingScene must follow this rhythm: concrete scene -> threat or pressure -> what is sensed right now -> one personal sting -> final question.
 - Keep openingScene to 3-6 sentences with no lists, labels, meta commentary, or biography dump.
 - Do not use phrases like "visible obstacle", "scene demands", "this scene is about", "NPC controls", "the hero must act", or their equivalents in other languages.
 - Show tension through place, sound, movement, danger, and NPC behavior instead of explanation.
 - End the openingScene with exactly "${getOpeningQuestion(room)}"
-- For every character, return one short internal cue in playerStartHooks. Each cue must be a single sentence and should help personalize later scenes without reading like a briefing.
-- Use each character's summary, backstory, motivation, and class fantasy to shape the cues, but weave at most 1-2 of those hooks into the openingScene itself.
+- For every character, return one short internal cue in playerStartHooks.
+${room.filters.noviceMode ? `
+- After the final question, append a hint block to openingScene with 3-4 example actions adapted to the actual scene and NPCs, like:
+
+---
+💡 Приклади дій, які ти можеш спробувати:
+• "Оглядаю двері" — подивитися, що навколо
+• "Підходжу до охоронця і говорю з ним" — почати розмову
+• "Ховаюся за ящиками" — зайняти позицію непомітно
+• "Атакую ножем" — напасти на ворога
+---
+` : ''}
 - Return strict JSON only.
 - Do not use markdown.
 - Use double-quoted property names.
@@ -1328,7 +1374,7 @@ export async function planActionResolution({
     try {
       const lockedPlan = await generateJson({
         generateText,
-        systemPrompt: ACTION_RESOLUTION_SYSTEM_PROMPT,
+        systemPrompt: buildActionPlannerSystemPrompt(room),
         schema: lockedPlanSchema,
         prompt: `
 The host engine already classified this action. Do not reinterpret it.
@@ -1380,7 +1426,7 @@ ${getLanguageInstruction(room.language)}
   try {
     const plan = await generateJson({
       generateText,
-      systemPrompt: ACTION_RESOLUTION_SYSTEM_PROMPT,
+      systemPrompt: buildActionPlannerSystemPrompt(room),
       schema: actionPlanSchema,
       prompt: `
 Plan how to resolve this player action.
@@ -1479,7 +1525,7 @@ export async function evaluateCheckStep({
   try {
     const evaluation = await generateJson({
       generateText,
-      systemPrompt: EVALUATE_CHECK_STEP_SYSTEM_PROMPT,
+      systemPrompt: buildCheckResolutionSystemPrompt(room),
       schema: evaluateCheckStepSchema,
       prompt: `
 Evaluate a single d20 check step.
@@ -1614,7 +1660,7 @@ export async function generateDmReply({
   resolvedChecks?: ResolvedCheck[];
 }) {
   return generateText({
-    systemPrompt: PROFESSIONAL_DM_SYSTEM_PROMPT,
+    systemPrompt: buildNarratorSystemPrompt(room),
     prompt: `
 Campaign:
 Title: ${room.title}
